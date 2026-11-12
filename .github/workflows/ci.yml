@@ -1,0 +1,44 @@
+---
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Lint the scripts
+        run: shellcheck entrypoint.sh test/entrypoint_test.sh
+
+      - name: Test the entrypoint
+        run: test/entrypoint_test.sh
+
+  # the action itself, on the workflows of this repository, with the last release of octoscan
+  action:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - id: octoscan
+        uses: ./
+
+      - name: The SARIF file exists
+        env:
+          SARIF: ${{ steps.octoscan.outputs.sarif_output }}
+        run: |
+          test -s "$SARIF"
+          grep -q '"version"' "$SARIF"

@@ -5,29 +5,56 @@ inputs:
   workdir:
     description: 'Working directory relative to the root directory.'
     default: '.'
+  version:
+    description: |
+      Version of octoscan to run: `latest` (the default, the last release of octoscan) or a release like `v0.1.7`.
+    default: 'latest'
   ### Flags for octoscan ###
   filter_triggers:
     description: |
       Scan workflows with specific triggers (comma separated list: "push,pull_request_target" or pre-configured: external/allnopr)
       Default is `external`.
     default: 'external'
-  filter_run: 
+  filter_run:
     description: 'Search for expression injection only in run shell scripts.'
     default: 'true'
   ignore:
-    descrption: 'Regular expression matching to error messages you want to ignore.'
+    description: 'Regular expression matching to error messages you want to ignore.'
   disable_rules:
     description: 'Disable specific rules. Split on ","'
   enable_rules:
     description: 'Enable specific rules, this will disable all other rules. Split on ","'
+  debug_rules:
+    description: 'Enable the debug rules.'
+    default: 'false'
+  config_file:
+    description: 'Config file of octoscan (path relative to the workdir).'
+  token:
+    description: 'Token to download octoscan from its releases.'
+    default: ${{ github.token }}
 
 outputs:
   sarif_output:
     description: 'The name of the file containing the sarif output.'
+    value: ${{ steps.octoscan.outputs.sarif_output }}
 
 runs:
-  using: 'docker'
-  image: 'Dockerfile'
+  using: 'composite'
+  steps:
+    - id: octoscan
+      shell: bash
+      run: '"$GITHUB_ACTION_PATH/entrypoint.sh"'
+      env:
+        GH_TOKEN: ${{ inputs.token }}
+        INPUT_WORKDIR: ${{ inputs.workdir }}
+        INPUT_VERSION: ${{ inputs.version }}
+        INPUT_FILTER_TRIGGERS: ${{ inputs.filter_triggers }}
+        INPUT_FILTER_RUN: ${{ inputs.filter_run }}
+        INPUT_IGNORE: ${{ inputs.ignore }}
+        INPUT_DISABLE_RULES: ${{ inputs.disable_rules }}
+        INPUT_ENABLE_RULES: ${{ inputs.enable_rules }}
+        INPUT_DEBUG_RULES: ${{ inputs.debug_rules }}
+        INPUT_CONFIG_FILE: ${{ inputs.config_file }}
 
 # Ref: https://haya14busa.github.io/github-action-brandings/
 branding:
