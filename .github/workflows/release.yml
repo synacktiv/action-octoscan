@@ -97,7 +97,7 @@ jobs:
       contents: write
     steps:
       - name: "Publish to GitHub"
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           draft: true
           tag_name: v${{ inputs.tag }}
